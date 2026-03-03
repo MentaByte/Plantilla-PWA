@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#667eea">
+  <title>Mi Aplicación</title>
+  
+  <!-- PWA -->
+  <link rel="manifest" href="../manifest.json">
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      color: #333;
+    }
+    
+    /* Loading Screen */
+    #loading {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+    
+    #loading.hidden {
+      display: none;
+    }
+    
+    .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #667eea;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    /* App Container */
+    #app {
+      display: none;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    #app.visible {
+      display: block;
+    }
+    
+    /* Header */
+    header {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    header h1 {
+      font-size: 24px;
+      color: #667eea;
+    }
+    
+    header button {
+      background: #dc3545;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: background 0.3s ease;
+    }
+    
+    header button:hover {
+      background: #c82333;
+    }
+    
+    /* Content Card */
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    
+    .card h2 {
+      margin-bottom: 15px;
+      color: #333;
+    }
+    
+    .card p {
+      line-height: 1.6;
+      color: #666;
+      margin-bottom: 15px;
+    }
+    
+    /* Status Badge */
+    .status {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    
+    .status.online {
+      background: #d4edda;
+      color: #155724;
+    }
+    
+    .status.offline {
+      background: #fff3cd;
+      color: #856404;
+    }
+    
+    /* Feature Grid */
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+    
+    .feature {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    
+    .feature-icon {
+      font-size: 40px;
+      margin-bottom: 10px;
+    }
+    
+    .feature h3 {
+      font-size: 16px;
+      margin-bottom: 8px;
+      color: #333;
+    }
+    
+    .feature p {
+      font-size: 14px;
+      color: #666;
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+  <!-- Loading Screen -->
+  <div id="loading">
+    <div class="spinner"></div>
+    <p>Validando acceso...</p>
+  </div>
+
+  <!-- Main App -->
+  <div id="app">
+    <header>
+      <h1>🎯 Mi Aplicación</h1>
+      <button onclick="logout()">Cerrar Sesión</button>
+    </header>
+
+    <div class="card">
+      <h2>¡Bienvenido! 👋</h2>
+      <p>Tu acceso ha sido validado correctamente.</p>
+      <p>Estado de conexión: <span id="connectionStatus" class="status online">En línea</span></p>
+    </div>
+
+    <div class="card">
+      <h2>Características de esta plantilla</h2>
+      <div class="features">
+        <div class="feature">
+          <div class="feature-icon">🔐</div>
+          <h3>Autenticación</h3>
+          <p>Sistema de códigos de licencia integrado</p>
+        </div>
+        
+        <div class="feature">
+          <div class="feature-icon">📱</div>
+          <h3>PWA</h3>
+          <p>Instalable como app nativa</p>
+        </div>
+        
+        <div class="feature">
+          <div class="feature-icon">⚡</div>
+          <h3>Offline First</h3>
+          <p>Funciona sin conexión</p>
+        </div>
+        
+        <div class="feature">
+          <div class="feature-icon">🛡️</div>
+          <h3>Seguro</h3>
+          <p>Validación de dispositivo</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Instrucciones de personalización</h2>
+      <p><strong>1. Reemplaza este contenido</strong> con tu aplicación real.</p>
+      <p><strong>2. Personaliza los estilos</strong> según tu marca.</p>
+      <p><strong>3. Agrega tus funcionalidades</strong> manteniendo la validación de sesión.</p>
+      <p><strong>4. Actualiza el manifest.json</strong> con el nombre y colores de tu app.</p>
+      <p><strong>5. Agrega tus recursos al Service Worker</strong> en sw.js.</p>
+    </div>
+  </div>
+
+  <script type="module">
+    import { validateSession, clearSession } from "../auth.js";
+
+    // ================================================
+    // VALIDACIÓN DE SESIÓN AL CARGAR
+    // ================================================
+    async function initApp() {
+      const loadingEl = document.getElementById('loading');
+      const appEl = document.getElementById('app');
+      const statusEl = document.getElementById('connectionStatus');
+
+      try {
+        const result = await validateSession();
+
+        if (result.valid) {
+          // ✅ Sesión válida - cargar app
+          console.log('✅ Sesión válida');
+          loadingEl.classList.add('hidden');
+          appEl.classList.add('visible');
+          
+        } else if (result.error === "revoked") {
+          // ❌ Acceso revocado - redirigir
+          console.log('❌ Acceso revocado');
+          window.location.href = "../fenix.html";
+          
+        } else if (result.no_internet) {
+          // ⚠️ Sin internet pero con sesión previa válida
+          console.log('⚠️ Sin internet - usando caché');
+          loadingEl.classList.add('hidden');
+          appEl.classList.add('visible');
+          statusEl.textContent = 'Sin conexión';
+          statusEl.className = 'status offline';
+          
+        } else {
+          // ❌ Sin sesión - redirigir a inicio
+          console.log('❌ Sin sesión válida');
+          alert('No tienes acceso. Necesitas un código de activación.');
+          window.location.href = "../";
+        }
+      } catch (error) {
+        console.error('Error al validar sesión:', error);
+        loadingEl.classList.add('hidden');
+        alert('Error al validar tu sesión. Intenta de nuevo.');
+      }
+    }
+
+    // ================================================
+    // FUNCIÓN DE LOGOUT
+    // ================================================
+    window.logout = function() {
+      if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+        clearSession();
+        alert('Sesión cerrada correctamente.');
+        window.location.href = '../';
+      }
+    }
+
+    // ================================================
+    // REGISTRO DEL SERVICE WORKER
+    // ================================================
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('../sw.js')
+        .then(reg => console.log('✅ Service Worker registrado'))
+        .catch(err => console.error('❌ Error al registrar SW:', err));
+    }
+
+    // ================================================
+    // DETECTAR CAMBIOS EN CONEXIÓN
+    // ================================================
+    window.addEventListener('online', () => {
+      const statusEl = document.getElementById('connectionStatus');
+      statusEl.textContent = 'En línea';
+      statusEl.className = 'status online';
+      console.log('✅ Conexión restaurada');
+    });
+
+    window.addEventListener('offline', () => {
+      const statusEl = document.getElementById('connectionStatus');
+      statusEl.textContent = 'Sin conexión';
+      statusEl.className = 'status offline';
+      console.log('⚠️ Sin conexión');
+    });
+
+    // ================================================
+    // INICIAR APP
+    // ================================================
+    initApp();
+  </script>
+</body>
+</html>
