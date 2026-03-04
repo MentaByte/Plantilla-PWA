@@ -1,0 +1,40 @@
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editores
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Dependencias (si usas node_modules)
+node_modules/
+package-lock.json
+yarn.lock
+
+# Build
+dist/
+build/
+
+# Temporal
+*.tmp
+*.temp
+
+# Environment
+.env
+.env.local
+.env.production
+
+# Específicos del proyecto
+# Descomenta estas líneas si no quieres subir íconos temporales
+# icon-192.png
+# icon-512.png

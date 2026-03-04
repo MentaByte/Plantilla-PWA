@@ -91,65 +91,104 @@
     <div id="message"></div>
   </div>
 
-  <script type="module">
-    import { activateLicense, saveSession } from "./auth.js";
+  <script>
+    /* ================================================
+       ACTIVACIÓN - Compatible Safari iOS
+       ✅ Sin módulos ES6 para máxima compatibilidad
+       =============================================== */
+    
+    const messageEl = document.getElementById("message");
+    
+    // Constantes de Supabase
+    const SUPABASE_URL = "https://zgatennqbagmyfbpiakr.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpnYXRlbm5xYmFnbXlmYnBpYWtyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEwMTg3NTEsImV4cCI6MjA4NjU5NDc1MX0.5c_IoL3_PM1zwFsuvblkoCoWbP9-4BSaMcIwSasLprw";
 
+    // Generar ID de dispositivo (compatible Safari)
+    function getDeviceId() {
+      let id = localStorage.getItem("device_id");
+      if (!id) {
+        id = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+          var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+          return v.toString(16);
+        });
+        localStorage.setItem("device_id", id);
+      }
+      return id;
+    }
+
+    // Activar licencia
+    async function activateLicense(code) {
+      const device_id = getDeviceId();
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/activate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({ code, device_id }),
+      });
+      return res.json();
+    }
+
+    // Guardar sesión
+    function saveSession(token) {
+      localStorage.setItem("session_token", token);
+      localStorage.setItem("last_known_status", "valid");
+    }
+
+    // Procesar activación
     const params = new URLSearchParams(window.location.search);
     const code = params.get("k");
-    const messageEl = document.getElementById("message");
 
     if (!code) {
-      // No hay código — mostrar error
       document.querySelector('h1').textContent = 'Acceso no válido';
       document.querySelector('p').textContent = 'No se proporcionó un código de activación.';
       document.querySelector('.loader').style.display = 'none';
       document.querySelector('.icon').textContent = '⚠️';
     } else {
-      try {
-        const result = await activateLicense(code);
-
-        if (result.session_token) {
-          // ✅ Activación exitosa
-          saveSession(result.session_token);
-          document.querySelector('h1').textContent = '¡Activado!';
-          document.querySelector('p').textContent = 'Redirigiendo a la aplicación...';
+      activateLicense(code)
+        .then(result => {
+          if (result.session_token) {
+            // ✅ Activación exitosa
+            saveSession(result.session_token);
+            document.querySelector('h1').textContent = '¡Activado!';
+            document.querySelector('p').textContent = 'Redirigiendo a la aplicación...';
+            document.querySelector('.loader').style.display = 'none';
+            document.querySelector('.icon').textContent = '✅';
+            
+            messageEl.className = 'success';
+            messageEl.textContent = 'Tu acceso ha sido activado correctamente.';
+            
+            setTimeout(() => {
+              window.location.replace("./core/");
+            }, 800);
+          } else {
+            // ❌ Error en la activación
+            document.querySelector('.loader').style.display = 'none';
+            document.querySelector('.icon').textContent = '❌';
+            
+            const mensajes = {
+              invalid_code: "El código no existe o no es válido.",
+              revoked: "Este acceso ha sido revocado.",
+              device_mismatch: "Este código ya está activo en otro dispositivo.",
+            };
+            
+            document.querySelector('h1').textContent = 'Error de activación';
+            document.querySelector('p').textContent = mensajes[result.error] || "Error desconocido.";
+            
+            messageEl.className = 'error';
+            messageEl.textContent = 'No se pudo activar tu acceso. Contacta al administrador.';
+          }
+        })
+        .catch(error => {
           document.querySelector('.loader').style.display = 'none';
-          document.querySelector('.icon').textContent = '✅';
-          
-          messageEl.className = 'success';
-          messageEl.textContent = 'Tu acceso ha sido activado correctamente.';
-          
-          // Redirigir a la app sin el código en la URL
-          setTimeout(() => {
-            window.location.replace("./core/");
-          }, 1500);
-        } else {
-          // ❌ Error en la activación
-          document.querySelector('.loader').style.display = 'none';
-          document.querySelector('.icon').textContent = '❌';
-          
-          const mensajes = {
-            invalid_code: "El código no existe o no es válido.",
-            revoked: "Este acceso ha sido revocado.",
-            device_mismatch: "Este código ya está activo en otro dispositivo.",
-          };
-          
-          document.querySelector('h1').textContent = 'Error de activación';
-          document.querySelector('p').textContent = mensajes[result.error] || "Error desconocido.";
+          document.querySelector('.icon').textContent = '⚠️';
+          document.querySelector('h1').textContent = 'Error de conexión';
+          document.querySelector('p').textContent = 'No se pudo conectar con el servidor.';
           
           messageEl.className = 'error';
-          messageEl.textContent = 'No se pudo activar tu acceso. Contacta al administrador.';
-        }
-      } catch (error) {
-        // Error de red o servidor
-        document.querySelector('.loader').style.display = 'none';
-        document.querySelector('.icon').textContent = '⚠️';
-        document.querySelector('h1').textContent = 'Error de conexión';
-        document.querySelector('p').textContent = 'No se pudo conectar con el servidor.';
-        
-        messageEl.className = 'error';
-        messageEl.textContent = 'Verifica tu conexión a internet e inténtalo de nuevo.';
-      }
+          messageEl.textContent = 'Error: ' + error.message;
+        });
     }
   </script>
 </body>

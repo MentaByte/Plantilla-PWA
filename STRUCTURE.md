@@ -1,249 +1,230 @@
-# 📁 Estructura del Proyecto
+# 📁 Estructura de la Plantilla PWA v1.3
+
+## Arquitectura de archivos
 
 ```
-pwa-template-auth/
+tu-pwa/
 │
-├── 📄 index.html              # Página de activación (recibe ?k=CODIGO)
-├── 🔐 auth.js                 # Lógica de autenticación (NO MODIFICAR)
-├── ⚙️ sw.js                   # Service Worker (PERSONALIZAR caché)
-├── 📱 manifest.json           # Configuración PWA (PERSONALIZAR nombre/colores)
-├── 🚫 fenix.html              # Página de acceso revocado (PERSONALIZAR diseño)
+├── 📄 index.html              # Página de activación (raíz)
+│   └── Valida código de licencia
+│   └── Guarda sesión
+│   └── Redirige a /core/
 │
-├── 📂 core/                   # 🎯 TU APLICACIÓN VA AQUÍ
-│   └── 📄 index.html          # App principal protegida
+├── 🔐 auth.js                 # Sistema de autenticación v1.3
+│   └── getDeviceId()          # ✅ Compatible Safari
+│   └── activateLicense()
+│   └── validateSession()
+│   └── saveSession()
+│   └── clearSession()
 │
-├── 📂 assets/                 # (CREAR) Tus recursos
-│   ├── 🖼️ images/
-│   ├── 🎨 styles/
-│   └── 📜 scripts/
+├── 📱 manifest.json           # Configuración PWA
+│   └── Nombre de la app
+│   └── Iconos
+│   └── Colores del tema
+│   └── Display mode
 │
-├── 🖼️ icon-192.png            # (AGREGAR) Ícono PWA 192x192
-├── 🖼️ icon-512.png            # (AGREGAR) Ícono PWA 512x512
+├── ⚙️ sw.js                   # Service Worker
+│   └── CACHE_NAME
+│   └── PRECACHE (archivos a cachear)
+│   └── Estrategias de caché
+│   └── Manejo offline
 │
-├── 📖 README.md               # Documentación completa
-├── ⚡ QUICKSTART.md           # Guía rápida (5 minutos)
-├── 📊 DATABASE.md             # Referencia de base de datos
-├── 💡 EXAMPLES.md             # Casos de uso y ejemplos
-└── 🚫 .gitignore              # Archivos a ignorar en Git
+├── 🚫 fenix.html              # Página de acceso revocado
+│   └── Mensaje de acceso denegado
+│   └── Opción de contacto
+│
+└── 📂 core/
+    └── 📄 index.html          # Tu aplicación principal
+        └── Validación automática
+        └── Interfaz de usuario
+        └── Funcionalidad principal
+        └── ✅ Sin módulos ES6
 ```
 
 ---
 
-## 📄 Descripción de Archivos
+## 🔄 Flujo de datos
 
-### Archivos que NO debes modificar ❌
-
-| Archivo | Descripción | ¿Modificar? |
-|---------|-------------|-------------|
-| `auth.js` | Sistema de autenticación | ❌ NO |
-
-### Archivos que DEBES personalizar ✅
-
-| Archivo | Descripción | ¿Modificar? |
-|---------|-------------|-------------|
-| `manifest.json` | Nombre, colores, iconos de la PWA | ✅ SÍ |
-| `sw.js` | Nombre del caché y lista de recursos | ✅ SÍ |
-| `core/index.html` | Tu aplicación principal | ✅ SÍ |
-| `index.html` | Página de activación (opcional) | 🟡 OPCIONAL |
-| `fenix.html` | Página de acceso revocado (opcional) | 🟡 OPCIONAL |
-
-### Archivos que DEBES crear 🆕
-
-| Archivo | Descripción | Obligatorio |
-|---------|-------------|-------------|
-| `icon-192.png` | Ícono 192x192 | ✅ SÍ |
-| `icon-512.png` | Ícono 512x512 | ✅ SÍ |
-| `assets/*` | Tus recursos (CSS, JS, imágenes) | 🟡 SEGÚN NECESITES |
-
----
-
-## 🎯 Flujo de Archivos
-
+### 1. Primera activación
 ```
-Usuario recibe link
+Usuario recibe link con código
+        ↓
+https://tuapp.com/?k=MF-XXXX-XXXX-XXXX
+        ↓
+index.html carga
+        ↓
+auth.js: activateLicense(code)
+        ↓
+Supabase valida código
+        ↓
+    ┌──────────┴──────────┐
+    ↓                     ↓
+✅ Válido              ❌ Error
+    ↓                     ↓
+saveSession()         Muestra error
+    ↓                     ↓
+localStorage          Usuario ve mensaje
     ↓
-/?k=MF-XXXX-XXXX-XXXX
+Redirige a /core/
     ↓
-┌─────────────────┐
-│  index.html     │ ← Valida código con auth.js
-└─────────────────┘
-    ↓
-    ├─ ✅ Válido → Guarda sesión
-    │               ↓
-    │           Redirige a /core/
-    │               ↓
-    │       ┌─────────────────┐
-    │       │ core/index.html │ ← Valida sesión
-    │       └─────────────────┘
-    │               ↓
-    │           ┌──────┴──────┐
-    │           ↓             ↓
-    │       Válida        Revocada
-    │           ↓             ↓
-    │       Carga App    Redirige a fenix.html
-    │
-    └─ ❌ Inválido → Muestra error
+App cargada
+```
+
+### 2. Validación en cada carga
+```
+Usuario abre /core/
+        ↓
+initApp() ejecuta
+        ↓
+validateSession()
+        ↓
+    ┌──────┴──────┐
+    ↓             ↓
+✅ Válida      ❌ Inválida
+    ↓             ↓
+Muestra app   Redirige
+    ↓             ↓
+              ┌───┴───┐
+              ↓       ↓
+          Revoked   Sin sesión
+              ↓       ↓
+          fenix.html  index.html
 ```
 
 ---
 
-## 🔄 Service Worker - Qué cachea
-
-```
-sw.js
-├── Cache First (rápido, offline)
-│   ├── HTML estáticos
-│   ├── CSS
-│   ├── JS
-│   ├── Imágenes
-│   └── Fuentes
-│
-├── Network First (siempre fresco)
-│   ├── core/index.html
-│   └── auth.js
-│
-└── Never Cache (siempre online)
-    └── *.supabase.co
-```
-
----
-
-## 📦 Recursos que necesitas agregar al caché
-
-En `sw.js`, sección `PRECACHE`, agrega:
+## 💾 LocalStorage Schema
 
 ```javascript
-const PRECACHE = [
-  BASE,
-  BASE + 'index.html',
-  BASE + 'auth.js',
-  BASE + 'core/index.html',
-  BASE + 'fenix.html',
-  BASE + 'manifest.json',
-  
-  // ✅ Agrega tus archivos aquí:
-  BASE + 'assets/styles/main.css',
-  BASE + 'assets/scripts/app.js',
-  BASE + 'assets/images/logo.png',
-  BASE + 'icon-192.png',
-  BASE + 'icon-512.png',
-  // ...más recursos
-];
-```
-
----
-
-## 🎨 Personalización por Archivo
-
-### manifest.json
-```json
 {
-  "name": "Tu App",           // ← Nombre completo
-  "short_name": "App",        // ← Nombre corto
-  "description": "...",       // ← Descripción
-  "background_color": "#hex", // ← Color de fondo al abrir
-  "theme_color": "#hex"       // ← Color de la barra superior
+  "device_id": "uuid-v4-format",
+  "session_token": "token-from-supabase",
+  "last_known_status": "valid" | "revoked"
 }
 ```
 
-### sw.js
+---
+
+## 🌐 Endpoints de Supabase
+
+### 1. Activación
+```
+POST /functions/v1/activate
+Body: {
+  code: "MF-XXXX-XXXX-XXXX",
+  device_id: "uuid"
+}
+Response: {
+  session_token: "token" | null,
+  error: "invalid_code" | "revoked" | "device_mismatch"
+}
+```
+
+### 2. Validación
+```
+POST /functions/v1/validate
+Body: {
+  session_token: "token",
+  device_id: "uuid"
+}
+Response: {
+  valid: true | false,
+  error: "revoked" | "invalid_token" | "device_mismatch"
+}
+```
+
+---
+
+## 🎨 Puntos de personalización
+
+### ✏️ Para cada nueva PWA, personaliza:
+
+1. **manifest.json**
+   - name
+   - short_name
+   - description
+   - background_color
+   - theme_color
+
+2. **sw.js**
+   - CACHE_NAME (nombre único)
+   - PRECACHE (archivos de tu app)
+
+3. **core/index.html**
+   - Todo el contenido de tu aplicación
+   - Estilos personalizados
+   - Funcionalidades específicas
+
+### 🚫 NO modificar:
+
+1. **auth.js** - Sistema de autenticación compartido
+2. **index.html** - Página de activación estándar
+3. **fenix.html** - Página de revocación estándar
+
+---
+
+## 📦 Archivos en caché (Service Worker)
+
+### Estrategia Cache-First:
+- `index.html`
+- `fenix.html`
+- `manifest.json`
+- Iconos (icon-192.png, icon-512.png)
+- Tus recursos estáticos (CSS, imágenes, etc.)
+
+### Estrategia Network-First:
+- `core/index.html` (siempre validar primero)
+- `auth.js` (siempre obtener versión fresca)
+
+### Never Cache:
+- `*.supabase.co` (APIs de Supabase)
+
+---
+
+## 🔧 Compatibilidad Safari iOS
+
+### ✅ v1.3 incluye:
+
+**auth.js:**
 ```javascript
-// Línea 7:
-const CACHE_NAME = 'tu-app-v1.0';  // ← Nombre único del caché
+// ❌ Antes (NO funciona en Safari)
+id = crypto.randomUUID();
 
-// Líneas 11-25:
-const PRECACHE = [
-  // ← Lista de archivos a cachear
-];
+// ✅ Ahora (Compatible Safari)
+id = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+  var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+  return v.toString(16);
+});
 ```
 
-### core/index.html
-```html
-<!-- Línea 6: -->
-<meta name="theme-color" content="#tu-color">
+**index.html y core/index.html:**
+```javascript
+// ❌ Antes (NO funciona bien en Safari)
+<script type="module">
+import { activateLicense } from './auth.js';
 
-<!-- Línea 8: -->
-<title>Tu App</title>
-
-<!-- Líneas 15+: -->
-<!-- Todo tu contenido HTML aquí -->
-```
-
----
-
-## 🚀 Orden de Implementación Recomendado
-
-1. ✅ Copia todos los archivos
-2. ✅ Personaliza `manifest.json` (nombre, colores)
-3. ✅ Actualiza `CACHE_NAME` en `sw.js`
-4. ✅ Crea tu app en `core/index.html`
-5. ✅ Agrega tus recursos a `assets/`
-6. ✅ Lista tus recursos en `PRECACHE` (sw.js)
-7. ✅ Genera íconos y agrégalos a la raíz
-8. ✅ Prueba con un código de Supabase
-9. ✅ Verifica funcionamiento offline
-10. ✅ ¡Listo para producción!
-
----
-
-## 📱 Testing Local
-
-```bash
-# 1. Sirve los archivos con un servidor local
-npx serve .
-# o
-python -m http.server 8000
-
-# 2. Abre en navegador
-http://localhost:8000/?k=TU-CODIGO-AQUI
-
-# 3. DevTools → Application → Service Workers
-# Verifica que esté activo
-
-# 4. DevTools → Application → Cache Storage
-# Verifica que los archivos estén cacheados
-
-# 5. DevTools → Network
-# Activa "Offline" y recarga
-# La app debe funcionar sin internet
+// ✅ Ahora (Compatible Safari)
+<script>
+// Funciones inline sin módulos ES6
 ```
 
 ---
 
-## 🆘 Archivos Faltantes Comunes
+## 🚀 Despliegue
 
-**Error:** Manifest no carga
-→ Falta `manifest.json` o tiene JSON inválido
+### Checklist de despliegue:
 
-**Error:** Service Worker no registra
-→ Verifica que `sw.js` esté en la raíz
-
-**Error:** Íconos rotos
-→ Agrega `icon-192.png` e `icon-512.png`
-
-**Error:** Assets no cargan offline
-→ Agrégalos al array `PRECACHE` en `sw.js`
-
-**Error:** "Cannot read property 'replace' of undefined"
-→ Service Worker mal configurado, revisa rutas en `sw.js`
+1. ✅ Archivos personalizados
+2. ✅ CACHE_NAME único en sw.js
+3. ✅ Iconos agregados (192x192 y 512x512)
+4. ✅ Todos los archivos en PRECACHE
+5. ✅ Probado en Chrome
+6. ✅ **Probado en Safari iOS** ✅
+7. ✅ Funciona offline
+8. ✅ Validación funciona
+9. ✅ Revocación funciona
+10. ✅ Códigos generados en Supabase
 
 ---
 
-## 📊 Tamaños Recomendados
-
-| Tipo | Tamaño Recomendado |
-|------|-------------------|
-| Ícono 192x192 | ~10-20 KB |
-| Ícono 512x512 | ~30-50 KB |
-| Imágenes | Máx 500 KB c/u |
-| CSS | Máx 100 KB |
-| JS | Máx 500 KB |
-| Total caché | Máx 50 MB |
-
----
-
-**Tip:** Usa herramientas como TinyPNG para optimizar imágenes antes de agregarlas.
-
----
-
-¡Tu PWA está lista para despegar! 🚀
+**v1.3 - Compatible Safari iOS y Chrome Android**
